@@ -1,0 +1,55 @@
+---
+- name: Adding User jenkins
+  include_role:
+    name: local_accounts
+    private: yes
+  vars:
+    users_list:
+      - username: u_sftp
+        github_username: anshprat
+
+- name: docker pull ftp
+  docker_image:
+    name: "{{ ftp_image }}:{{ ftp_tag }}"
+
+
+- name: mkdir /app/docker/sftp
+  file:
+    path: /app/docker/sftp/{{ item }}
+    state: directory
+  with_items:
+    - data
+    - config/
+  tags: files
+
+- name: copy config files
+  copy:
+    src: "files/{{ component }}"
+    dest: /app/docker/sftp/config/
+    mode: 0400
+    owner: u_sftp
+
+- name: run sftp
+  docker_container:
+    name: sftp
+    image: "{{ ftp_image}}:{{ftp_tag }}"
+    hostname: "sftp-{{ ansible_nodename }}"
+    volumes:
+      - "/app/docker/sftp/config/{{ component }}/users.conf:/etc/sftp/users.conf:ro"
+      - "/app/docker/sftp/config/{{ component }}/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key"
+      - "/app/docker/sftp/config/{{ component }}/ssh_host_rsa_key:/etc/ssh/ssh_host_rsa_key"
+      - "/app/docker/sftp/config/{{ component }}:/mnt/users/:ro"
+    ports:
+      - "{{ t_vars[app_env][component].SFTP_PORT }}"
+      - "8088:8088"
+    env:
+        dirPath: /home
+        S3_BUCKET_NAME: "{{ t_vars[app_env][component].S3_BUCKET_NAME }}"
+        AWSACCESSKEYID: "{{ t_vars[app_env][component].AWSACCESSKEYID }}"
+        AWSSECRETACCESSKEY: "{{ t_vars[app_env][component].AWSSECRETACCESSKEY }}"
+    privileged: true
+    restart_policy: unless-stopped
+    capabilities: ["SYS_ADMIN"]
+  tags: run_sftp
+#0ea0f769c5   $1$ZaKaGS9i$bNFHXfIlBvO7TjkMEsXlJ1
+    # command: 'u_sftp:$1$ZaKaGS9i$bNFHXfIlBvO7TjkMEsXlJ1:e:8082'

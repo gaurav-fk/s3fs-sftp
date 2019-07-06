@@ -1,0 +1,15 @@
+---
+  # ftp_image: atmoz/sftp
+  ftp_image: sftp_s3fs
+  ftp_tag: latest
+  t_vars:
+    dev:
+    stg:
+    prod:
+      test:
+        S3_BUCKET_NAME: test_bucket
+        AWSSECRETACCESSKEY: <AWS key>
+        AWSACCESSKEYID: <AWS id>
+        SFTP_PORT: "8081:22"
+  app_env: stg
+  component: test
