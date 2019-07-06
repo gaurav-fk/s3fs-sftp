@@ -1,13 +1,4 @@
 ---
-- name: Adding User jenkins
-  include_role:
-    name: local_accounts
-    private: yes
-  vars:
-    users_list:
-      - username: u_sftp
-        github_username: anshprat
-
 - name: docker pull ftp
   docker_image:
     name: "{{ ftp_image }}:{{ ftp_tag }}"
